@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>MOEX: Акции TQBR — Демо-мониторинг</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f9fafb;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 32px 24px;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 20px 25px -5px rgba(0,0,0,0.02);
+            overflow: hidden;
+            border: 1px solid #eef2f6;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #eef2f6;
+        }
+
+        .search-wrapper {
+            width: 140px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+        }
+
+        .price-filter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f8fafc;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+        }
+        .price-filter label {
+            font-size: 0.75rem;
+            color: #475569;
+        }
+        .price-filter input {
+            width: 70px;
+            padding: 5px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            background: white;
+            outline: none;
+        }
+        .price-filter input:focus {
+            border-color: #3b82f6;
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #1e293b;
+        }
+        .btn:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .refresh-btn {
+            border-color: #22c55e;
+            color: #15803d;
+        }
+        .refresh-btn:hover {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+
+        .sort-select-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+        }
+        .sort-select-wrapper label {
+            font-size: 0.75rem;
+            color: #475569;
+            font-weight: 500;
+        }
+        .sort-main-select {
+            padding: 5px 8px;
+            border: none;
+            background: transparent;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            color: #1e293b;
+        }
+
+        .menu-dropdown {
+            position: relative;
+        }
+        .menu-trigger {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            padding: 6px 14px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.15s;
+        }
+        .menu-trigger:hover {
+            background: #f1f5f9;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border: 1px solid #eef2f6;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            min-width: 210px;
+            z-index: 50;
+            display: none;
+            overflow: hidden;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .dropdown-item {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.1s;
+            color: #1e293b;
+        }
+        .dropdown-item:hover {
+            background: #f8fafc;
+        }
+        .dropdown-item input {
+            margin: 0;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .stats-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #f8fafc;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            color: #334155;
+        }
+        .stats-item strong {
+            font-weight: 600;
+            color: #0f172a;
+            margin-left: 4px;
+        }
+        .filtered-highlight {
+            color: #3b82f6 !important;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+            min-width: 800px;
+        }
+        .stock-table th {
+            background: #fcfcfd;
+            padding: 12px 12px;
+            text-align: right;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #eef2f6;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .stock-table th:first-child, .stock-table td:first-child {
+            text-align: left;
+            padding-left: 20px;
+        }
+        .stock-table td {
+            padding: 10px 12px;
+            text-align: right;
+            border-bottom: 1px solid #f1f5f9;
+            color: #0f172a;
+            font-size: 0.8rem;
+        }
+        .stock-table tr:hover td {
+            background: #fefce8;
+        }
+        .ticker {
+            font-family: 'SF Mono', monospace;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 48px;
+            color: #94a3b8;
+        }
+        .volatility-positive { color: #16a34a; font-weight: 500; }
+        .volatility-negative { color: #dc2626; }
+        .hidden-column { display: none; }
+
+        footer {
+            padding: 12px 20px;
+            font-size: 0.7rem;
+            color: #64748b;
+            text-align: right;
+            border-top: 1px solid #eef2f6;
+            background: #fefefe;
+        }
+        
+        .demo-badge {
+            background: #fef9e3;
+            border-left: 4px solid #f59e0b;
+            padding: 8px 20px;
+            margin: 8px 20px;
+            font-size: 0.75rem;
+            color: #92400e;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="toolbar">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Тикер" maxlength="10">
+        </div>
+        <div class="price-filter">
+            <label>💰 от</label>
+            <input type="number" id="priceFrom" placeholder="0" step="1">
+            <label>до</label>
+            <input type="number" id="priceTo" placeholder="∞" step="1">
+        </div>
+        <button class="btn" id="resetFiltersBtn">Сброс</button>
+
+        <div class="sort-select-wrapper">
+            <label>📊 Сортировка:</label>
+            <select id="sortSelect" class="sort-main-select">
+                <option value="score_desc">🏆 Лучшее соотношение 🔽</option>
+                <option value="score_asc">🏆 Лучшее соотношение 🔼</option>
+                <option value="volatility_desc">📈 Волатильность 🔽</option>
+                <option value="volatility_asc">📈 Волатильность 🔼</option>
+                <option value="commissionRub_desc">💸 Комиссия ₽ 🔽</option>
+                <option value="commissionRub_asc">💸 Комиссия ₽ 🔼</option>
+                <option value="commissionPoints_desc">🎯 Комиссия п. 🔽</option>
+                <option value="commissionPoints_asc">🎯 Комиссия п. 🔼</option>
+                <option value="price_desc">💰 Цена 🔽</option>
+                <option value="price_asc">💰 Цена 🔼</option>
+                <option value="name_asc">📌 Название 🔼</option>
+                <option value="name_desc">📌 Название 🔽</option>
+                <option value="ticker_asc">🏷️ Тикер 🔼</option>
+                <option value="ticker_desc">🏷️ Тикер 🔽</option>
+            </select>
+        </div>
+
+        <div class="menu-dropdown">
+            <div class="menu-trigger" id="menuTrigger">
+                <span>⋮</span> Колонки
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <label class="dropdown-item">
+                    <input type="checkbox" id="toggleStep" checked> 🔢 Шаг цены
+                </label>
+                <label class="dropdown-item">
+                    <input type="checkbox" id="toggleStepCost" checked> ⚙️ Стоимость шага
+                </label>
+                <label class="dropdown-item">
+                    <input type="checkbox" id="toggleCommissionRub" checked> 💸 Комиссия ₽
+                </label>
+            </div>
+        </div>
+
+        <div class="stats-group">
+            <div class="stats-item">📊 Всего: <strong id="totalStocksCount">--</strong></div>
+            <div class="stats-item">🔍 Показано: <strong id="filteredStocksCount">--</strong></div>
+            <div class="stats-item">🕐 <strong id="lastUpdateLabel">--:--:--</strong></div>
+        </div>
+        <button class="btn refresh-btn" id="refreshBtn">⟳ Обновить</button>
+    </div>
+
+    <div class="demo-badge" id="demoBadge">
+        ⚠️ ДЕМО-РЕЖИМ: API MOEX недоступен. Показаны тестовые данные для демонстрации функционала.
+    </div>
+
+    <div class="table-container">
+        <table class="stock-table" id="stockTable">
+            <thead>
+                <tr>
+                    <th>📌 Название</th>
+                    <th>🏷️ Тикер</th>
+                    <th>💰 Цена</th>
+                    <th class="col-step">🔢 Шаг цены</th>
+                    <th class="col-stepCost">⚙️ Стоимость шага</th>
+                    <th class="col-commissionRub">💸 Комиссия ₽</th>
+                    <th>🎯 Комиссия п.</th>
+                    <th>📈 Волатильность</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr><td colspan="8" class="loading">⏳ Загрузка демо-данных...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <footer>
+        📊 Демонстрационные данные MOEX TQBR • Обновление вручную по кнопке ⟳<br>
+        🎯 Лучшее соотношение = (Цена / Комиссия ₽) × (1 / (Волатильность + 0,1))<br>
+        📐 Шаг цены = MINSTEP / 100, Стоимость шага = STEPPRICE / 100
+    </footer>
+</div>
+
+<script>
+    // ========== ДЕМО-ДАННЫЕ (соответствуют реальным значениям) ==========
+    const DEMO_STOCKS = [
+        { ticker: "ABIO", name: "АбрауДюрсо", price: 151.2, step: 0.02, stepCost: 0.2, volatility: 1.8 },
+        { ticker: "ABRD", name: "АбрауДюрсо ао", price: 245.5, step: 0.2, stepCost: 2, volatility: 2.3 },
+        { ticker: "AFKS", name: "АФК Система", price: 22.85, step: 0.001, stepCost: 0.1, volatility: 3.2 },
+        { ticker: "AFLT", name: "Аэрофлот", price: 45.12, step: 0.01, stepCost: 0.5, volatility: 4.5 },
+        { ticker: "ALRS", name: "АЛРОСА", price: 78.90, step: 0.05, stepCost: 0.8, volatility: 2.1 },
+        { ticker: "CHMF", name: "Северсталь", price: 1560.5, step: 0.5, stepCost: 5, volatility: 1.5 },
+        { ticker: "GAZP", name: "Газпром", price: 168.32, step: 0.05, stepCost: 0.75, volatility: 3.8 },
+        { ticker: "GMKN", name: "Норильский никель", price: 14520.0, step: 5, stepCost: 50, volatility: 2.9 },
+        { ticker: "LKOH", name: "ЛУКОЙЛ", price: 7120.5, step: 2, stepCost: 20, volatility: 1.9 },
+        { ticker: "MGNT", name: "Магнит", price: 4520.0, step: 1, stepCost: 10, volatility: 2.4 },
+        { ticker: "MOEX", name: "Московская биржа", price: 135.8, step: 0.05, stepCost: 0.5, volatility: 2.7 },
+        { ticker: "MTSS", name: "МТС", price: 285.4, step: 0.1, stepCost: 1, volatility: 1.6 },
+        { ticker: "NLMK", name: "НЛМК", price: 195.3, step: 0.05, stepCost: 0.5, volatility: 2.2 },
+        { ticker: "ROSN", name: "Роснефть", price: 545.2, step: 0.2, stepCost: 2, volatility: 3.1 },
+        { ticker: "SBER", name: "Сбербанк", price: 285.6, step: 0.05, stepCost: 0.5, volatility: 4.2 },
+        { ticker: "TATN", name: "Татнефть", price: 625.8, step: 0.2, stepCost: 2, volatility: 2.5 },
+        { ticker: "VTBR", name: "ВТБ", price: 0.02545, step: 0.00005, stepCost: 0.0005, volatility: 5.8 }
+    ];
+
+    // Добавляем расчет комиссии для демо-данных
+    for (const s of DEMO_STOCKS) {
+        const rub = (s.stepCost / s.step) * s.price * 0.00026;
+        s.commissionRub = rub;
+        s.commissionPoints = rub / s.stepCost;
+    }
+
+    // ========== СОСТОЯНИЕ ==========
+    let allStocks = [...DEMO_STOCKS];
+    let filteredStocks = [];
+    let currentSort = { column: 'score', direction: 'desc' };
+
+    let columnVisibility = {
+        step: true,
+        stepCost: true,
+        commissionRub: true
+    };
+
+    const dom = {
+        search: document.getElementById('searchInput'),
+        priceFrom: document.getElementById('priceFrom'),
+        priceTo: document.getElementById('priceTo'),
+        resetBtn: document.getElementById('resetFiltersBtn'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        sortSelect: document.getElementById('sortSelect'),
+        tableBody: document.getElementById('tableBody'),
+        totalCount: document.getElementById('totalStocksCount'),
+        filteredCount: document.getElementById('filteredStocksCount'),
+        lastUpdate: document.getElementById('lastUpdateLabel'),
+        toggleStep: document.getElementById('toggleStep'),
+        toggleStepCost: document.getElementById('toggleStepCost'),
+        toggleCommissionRub: document.getElementById('toggleCommissionRub'),
+        menuTrigger: document.getElementById('menuTrigger'),
+        dropdownMenu: document.getElementById('dropdownMenu'),
+        demoBadge: document.getElementById('demoBadge')
+    };
+
+    // ========== ФОРМАТИРОВАНИЕ ==========
+    function formatNumber(value) {
+        if (value === undefined || value === null || isNaN(value)) return '—';
+        let rounded = Number(value).toFixed(2);
+        rounded = rounded.replace('.', ',').replace(/,0+$/, '').replace(/,$/, '');
+        return rounded || '0';
+    }
+    function formatNumberPlain(v) { return formatNumber(v); }
+    function formatPercent(v) { return v ? formatNumber(v) + '%' : '—'; }
+
+    function calculateScore(s) {
+        if (!s.commissionRub || s.commissionRub <= 0) return 0;
+        return s.price * (1 / (s.commissionRub + 0.01)) * (1 / ((s.volatility || 0) + 0.1)) * 100;
+    }
+
+    function getSortValue(stock, column) {
+        const map = {
+            score: calculateScore(stock),
+            name: stock.name,
+            ticker: stock.ticker,
+            price: stock.price,
+            step: stock.step,
+            stepCost: stock.stepCost,
+            commissionRub: stock.commissionRub ?? Infinity,
+            commissionPoints: stock.commissionPoints ?? Infinity,
+            volatility: stock.volatility ?? Infinity
+        };
+        return map[column] ?? 0;
+    }
+
+    function applySorting() {
+        if (!filteredStocks.length) return;
+        filteredStocks.sort((a, b) => {
+            const valA = getSortValue(a, currentSort.column);
+            const valB = getSortValue(b, currentSort.column);
+            if (valA === valB) return 0;
+            if (typeof valA === 'string') {
+                const cmp = valA.localeCompare(valB);
+                return currentSort.direction === 'asc' ? cmp : -cmp;
+            }
+            return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+        });
+        renderTable();
+    }
+
+    function applyFilters() {
+        let res = [...allStocks];
+        let term = dom.search.value.trim().toLowerCase();
+        if (term) res = res.filter(s => s.name.toLowerCase().includes(term) || s.ticker.toLowerCase().includes(term));
+        let from = dom.priceFrom.value ? parseFloat(dom.priceFrom.value) : null;
+        let to = dom.priceTo.value ? parseFloat(dom.priceTo.value) : null;
+        if (from !== null) res = res.filter(s => s.price >= from);
+        if (to !== null) res = res.filter(s => s.price <= to);
+        filteredStocks = res;
+        applySorting();
+        updateStats();
+    }
+
+    function updateStats() {
+        dom.totalCount.textContent = allStocks.length;
+        dom.filteredCount.textContent = filteredStocks.length;
+        if (filteredStocks.length !== allStocks.length) {
+            dom.filteredCount.classList.add('filtered-highlight');
+        } else {
+            dom.filteredCount.classList.remove('filtered-highlight');
+        }
+    }
+
+    function resetFilters() {
+        dom.search.value = '';
+        dom.priceFrom.value = '';
+        dom.priceTo.value = '';
+        applyFilters();
+    }
+
+    function updateSortFromSelect() {
+        const value = dom.sortSelect.value;
+        const [column, direction] = value.split('_');
+        currentSort = { column, direction };
+        applyFilters();
+    }
+
+    function updateColumnVisibility() {
+        const stepTh = document.querySelectorAll('.col-step');
+        const stepCostTh = document.querySelectorAll('.col-stepCost');
+        const commissionRubTh = document.querySelectorAll('.col-commissionRub');
+        stepTh.forEach(el => el.classList.toggle('hidden-column', !columnVisibility.step));
+        stepCostTh.forEach(el => el.classList.toggle('hidden-column', !columnVisibility.stepCost));
+        commissionRubTh.forEach(el => el.classList.toggle('hidden-column', !columnVisibility.commissionRub));
+    }
+
+    function initColumnToggles() {
+        dom.toggleStep.checked = columnVisibility.step;
+        dom.toggleStepCost.checked = columnVisibility.stepCost;
+        dom.toggleCommissionRub.checked = columnVisibility.commissionRub;
+        dom.toggleStep.addEventListener('change', (e) => { columnVisibility.step = e.target.checked; updateColumnVisibility(); });
+        dom.toggleStepCost.addEventListener('change', (e) => { columnVisibility.stepCost = e.target.checked; updateColumnVisibility(); });
+        dom.toggleCommissionRub.addEventListener('change', (e) => { columnVisibility.commissionRub = e.target.checked; updateColumnVisibility(); });
+        updateColumnVisibility();
+    }
+
+    function initDropdown() {
+        dom.menuTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dom.dropdownMenu.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!dom.menuTrigger.contains(e.target) && !dom.dropdownMenu.contains(e.target)) {
+                dom.dropdownMenu.classList.remove('show');
+            }
+        });
+    }
+
+    function renderTable() {
+        if (!filteredStocks.length) {
+            dom.tableBody.innerHTML = '<tr><td colspan="8" class="no-data">📭 Акции не найдены</td></tr>';
+            return;
+        }
+        let html = '';
+        for (const s of filteredStocks) {
+            const volClass = s.volatility > 5 ? 'volatility-positive' : (s.volatility < 2 ? 'volatility-negative' : '');
+            html += `<tr>
+                <td>${escapeHtml(s.name)}</td>
+                <td class="ticker">${escapeHtml(s.ticker)}</td>
+                <td>${formatNumberPlain(s.price)}</td>
+                <td class="col-step">${formatNumberPlain(s.step)}</td>
+                <td class="col-stepCost">${formatNumberPlain(s.stepCost)}</td>
+                <td class="col-commissionRub">${formatNumberPlain(s.commissionRub)}</td>
+                <td>${formatNumberPlain(s.commissionPoints)}</td>
+                <td class="${volClass}">${formatPercent(s.volatility)}</td>
+            </tr>`;
+        }
+        dom.tableBody.innerHTML = html;
+        updateColumnVisibility();
+    }
+
+    function escapeHtml(str) { 
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m)); 
+    }
+
+    function refreshData() {
+        // В демо-режиме просто обновляем время
+        const now = new Date();
+        dom.lastUpdate.textContent = now.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        // Небольшая анимация обновления
+        dom.refreshBtn.style.opacity = '0.6';
+        setTimeout(() => { dom.refreshBtn.style.opacity = '1'; }, 200);
+        console.log('🕐 Демо-данные обновлены');
+    }
+
+    function init() {
+        dom.search.addEventListener('input', applyFilters);
+        dom.priceFrom.addEventListener('input', applyFilters);
+        dom.priceTo.addEventListener('input', applyFilters);
+        dom.resetBtn.addEventListener('click', resetFilters);
+        dom.refreshBtn.addEventListener('click', refreshData);
+        dom.sortSelect.addEventListener('change', updateSortFromSelect);
+        
+        initDropdown();
+        initColumnToggles();
+        
+        // Инициализация данных
+        applyFilters();
+        const now = new Date();
+        dom.lastUpdate.textContent = now.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    }
+    
+    init();
+</script>
+</body>
+</html>
